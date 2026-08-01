@@ -3,7 +3,7 @@ name: Auto Run Clinic Scraper
 on:
   workflow_dispatch: # 允許你在 GitHub 網頁上手動點擊執行
   schedule:
-    - cron: '0 0 1 * *' # 自動排程：每月 1 號 UTC 00:00 (台灣時間 08:00) 自動跑一次
+    - cron: '0 0 * * 1' # 台灣時間每週一早上 08:00 自動執行 (UTC 時間週一 00:00)
 
 jobs:
   scrape:
