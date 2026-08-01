@@ -1,0 +1,40 @@
+name: Auto Run Clinic Scraper
+
+on:
+  workflow_dispatch: # 允許你在 GitHub 網頁上手動點擊執行
+  schedule:
+    - cron: '0 0 1 * *' # 自動排程：每月 1 號 UTC 00:00 (台灣時間 08:00) 自動跑一次
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+
+    - name: Install Chrome and Drivers
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y google-chrome-stable
+
+    - name: Install Python Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium beautifulsoup4 pandas webdriver-manager
+
+    - name: Run Scraper Script
+      run: python scraper.py
+
+    - name: Commit and Push Updated CSV
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add taichung_clinics.csv
+        git commit -m "Auto update clinic list [skip ci]" || exit 0
+        git push
