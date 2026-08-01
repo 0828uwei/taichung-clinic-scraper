@@ -29,9 +29,7 @@ def run_scraper():
     ]
 
     categories = [
-        '醫美診所', '肌膚管理', '整形外科', '皮膚科', '泌尿科', '骨科', 
-        '美學診所', '診所', '外科', '婦產科', '整形', '醫美', '整外', 
-        '雷射', '除毛', '音波', '電波', '拉提', '包皮', '醫學美容', '肉毒', '玻尿酸', '皮膚'
+        '醫美', '美學', '肌膚管理', '皮膚科', '整形外科', '診所', '泌尿科', '骨科', '婦產科', '整形', '雷射', '醫學美容'
     ]
 
     all_clinics = []
@@ -50,9 +48,9 @@ def run_scraper():
 
             try:
                 scrollable_div = driver.find_element(By.XPATH, '//div[@role="feed"]')
-                for _ in range(5):
+                for _ in range(8):
                     driver.execute_script('arguments[0].scrollTop = arguments[0].scrollHeight', scrollable_div)
-                    time.sleep(1.5)
+                    time.sleep(1)
             except Exception:
                 pass
 
