@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台中/彰化 診所客戶篩選系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+  <header class="bg-blue-600 text-white shadow-md py-6 mb-6">
+    <div class="max-w-6xl mx-auto px-4">
+      <h1 class="text-2xl font-bold">🏥 台中 / 彰化 診所客戶管理系統</h1>
+      <p class="text-blue-100 text-sm mt-1">選取區域與類別，快速進行區域拜訪規劃</p>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+      
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">📍 選擇行政區</label>
+        <select id="districtFilter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="ALL">全部行政區</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">🏷️ 選擇診所類別</label>
+        <select id="categoryFilter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+          <option value="ALL">全部類別</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-1">🔍 搜尋名稱/地址</label>
+        <input type="text" id="searchInput" placeholder="輸入診所名稱或路名..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+      </div>
+
+    </div>
+
+    <div class="flex justify-between items-center mb-4 px-1">
+      <div class="text-slate-600 text-sm">
+        符合條件診所：<span id="countText" class="font-bold text-blue-600">0</span> 筆
+      </div>
+    </div>
+
+    <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="col-span-full text-center py-12 text-slate-400">載入診所資料中...</div>
+    </div>
+  </main>
+
+  <script>
+    let rawData = [];
+
+    Papa.parse("taichung_clinics.csv", {
+      download: true,
+      header: true,
+      complete: function(results) {
+        rawData = results.data.filter(row => row['診所名稱']);
+        initDropdowns();
+        renderCards();
+      },
+      error: function() {
+        document.getElementById('cardsGrid').innerHTML = `
+          <div class="col-span-full text-center py-12 text-red-500 font-semibold">
+            ❌ 尚未找到 taichung_clinics.csv 檔案，請確認 GitHub Actions 已成功執行過一次抓取任務。
+          </div>`;
+      }
+    });
+
+    function initDropdowns() {
+      const districts = [...new Set(rawData.map(item => item['搜尋行政區']).filter(Boolean))].sort();
+      const categories = [...new Set(rawData.map(item => item['診所類別']).filter(Boolean))].sort();
+
+      const districtSelect = document.getElementById('districtFilter');
+      districts.forEach(dist => {
+        const opt = document.createElement('option');
+        opt.value = dist;
+        opt.textContent = dist;
+        districtSelect.appendChild(opt);
+      });
+
+      const categorySelect = document.getElementById('categoryFilter');
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        categorySelect.appendChild(opt);
+      });
+
+      districtSelect.addEventListener('change', renderCards);
+      categorySelect.addEventListener('change', renderCards);
+      document.getElementById('searchInput').addEventListener('input', renderCards);
+    }
+
+    function renderCards() {
+      const selectedDist = document.getElementById('districtFilter').value;
+      const selectedCat = document.getElementById('categoryFilter').value;
+      const searchText = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      const filtered = rawData.filter(item => {
+        const matchDist = selectedDist === 'ALL' || item['搜尋行政區'] === selectedDist;
+        const matchCat = selectedCat === 'ALL' || item['診所類別'] === selectedCat;
+        const matchSearch = !searchText || 
+          (item['診所名稱'] && item['診所名稱'].toLowerCase().includes(searchText)) ||
+          (item['地址'] && item['地址'].toLowerCase().includes(searchText));
+
+        return matchDist && matchCat && matchSearch;
+      });
+
+      document.getElementById('countText').textContent = filtered.length;
+      const grid = document.getElementById('cardsGrid');
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">沒有符合搜尋條件的診所</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(item => {
+        const googleMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item['診所名稱'] + ' ' + item['地址'])}`;
+        return `
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2 mb-2">
+                <h3 class="font-bold text-slate-800 text-base leading-snug">${item['診所名稱']}</h3>
+                <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md whitespace-nowrap font-medium">${item['診所類別']}</span>
+              </div>
+              <p class="text-xs text-slate-500 mb-3">📍 ${item['搜尋行政區']}</p>
+              
+              <div class="text-sm text-slate-600 space-y-1.5 mb-4">
+                <p class="flex items-start gap-1">
+                  <span class="shrink-0">🏢</span>
+                  <span>${item['地址'] || '未提供完整地址'}</span>
+                </p>
+                <p class="flex items-center gap-1">
+                  <span class="shrink-0">📞</span>
+                  ${item['電話'] ? `<a href="tel:${item['電話']}" class="text-blue-600 hover:underline">${item['電話']}</a>` : '<span class="text-slate-400">未提供電話</span>'}
+                </p>
+              </div>
+            </div>
+
+            <a href="${googleMapUrl}" target="_blank" class="w-full text-center bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-1 mt-2">
+              🗺️ 開啟 Google 地圖導航
+            </a>
+          </div>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
