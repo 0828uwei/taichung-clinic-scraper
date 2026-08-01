@@ -5,7 +5,9 @@ from urllib.parse import quote
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 
 def run_scraper():
     chrome_options = Options()
@@ -16,7 +18,9 @@ def run_scraper():
     chrome_options.add_argument('--lang=zh-TW')
     chrome_options.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
-    driver = webdriver.Chrome(options=chrome_options)
+    # 使用 webdriver-manager 自動下載並匹配與當前 Chrome 相符的 ChromeDriver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
     # 包含台中與彰化（排除彰化市與員林市）的區域
     districts = [
@@ -87,7 +91,7 @@ def run_scraper():
                         count += 1
                 except Exception:
                     continue
-            print(f"   └─ 抓取到 {count} 筆新資料")
+            print(f"    └─ 抓取到 {count} 筆新資料")
 
     driver.quit()
 
