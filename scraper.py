@@ -31,19 +31,23 @@ def run_scraper():
         '彰化縣田中鎮', '彰化縣北斗鎮', '彰化縣花壇鄉', '彰化縣秀水鄉', '彰化縣永靖鄉',
     ]
 
+    # 【調整 1】：新增 '美容' 與 '皮膚管理'，大幅增加工作室與美學館的曝光率
     categories = [
-        '醫美', '美學', '肌膚管理', '皮膚科', '整形外科', '診所', '泌尿科', '骨科', '婦產科', '醫學美容'
+        '醫美', '美學', '肌膚管理', '皮膚科', '整形外科', 
+        '診所', '泌尿科', '骨科', '婦產科', '醫學美容',
+        '美容', '皮膚管理'
     ]
 
     all_clinics = []
     seen_keys = set()
 
-    print("🚀 開始執行診所自動抓取作業...\n")
+    # 加上的 flush=True 可以讓 GitHub Actions 即時印出 Log，不再快取卡住
+    print("🚀 開始執行診所自動抓取作業...\n", flush=True)
 
     for dist in districts:
         for cat in categories:
             keyword = f"{dist} {cat}"
-            print(f"🔍 搜尋中：{keyword}")
+            print(f"🔍 搜尋中：{keyword}", flush=True)
             
             url = f"https://www.google.com/maps/search/{quote(keyword)}"
             driver.get(url)
@@ -91,14 +95,46 @@ def run_scraper():
                         count += 1
                 except Exception:
                     continue
-            print(f"    └─ 抓取到 {count} 筆新資料")
+            print(f"    └─ 抓取到 {count} 筆新資料", flush=True)
 
     driver.quit()
+
+    # 【調整 2】：必抓保底清單，確保重點目標 100% 寫入 CSV
+    must_have_clinics = [
+        {
+            '診所名稱': '沐泳吉玥診所',
+            '搜尋行政區': '台中市北屯區',
+            '診所類別': '醫美',
+            '地址': '台中市北屯區',
+            '電話': ''
+        },
+        {
+            '診所名稱': '日安青禾皮膚科診所',
+            '搜尋行政區': '台中市東區',
+            '診所類別': '皮膚科',
+            '地址': '台中市東區',
+            '電話': ''
+        }
+        {
+            '診所名稱': '漢蒂妮風尚診所',
+            '搜尋行政區': '台中市西區',
+            '診所類別': '醫美',
+            '地址': '台中市西區',
+            '電話': ''
+        }
+    ]
+
+    for item in must_have_clinics:
+        unique_key = f"{item['診所名稱']}_{item['搜尋行政區']}"
+        if unique_key not in seen_keys:
+            seen_keys.add(unique_key)
+            all_clinics.append(item)
+            print(f"📌 強制補入重點店家：{item['診所名稱']}", flush=True)
 
     df = pd.DataFrame(all_clinics)
     output_filename = 'taichung_clinics.csv'
     df.to_csv(output_filename, index=False, encoding='utf-8-sig')
-    print(f"\n✅ 抓取完成！共收集 {len(df)} 筆不重複診所，檔案已儲存至 {output_filename}")
+    print(f"\n✅ 抓取完成！共收集 {len(df)} 筆不重複診所，檔案已儲存至 {output_filename}", flush=True)
 
 if __name__ == '__main__':
     run_scraper()
