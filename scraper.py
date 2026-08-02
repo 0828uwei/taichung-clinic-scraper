@@ -35,7 +35,7 @@ def run_scraper():
     # 自動組合全名（台中市/彰化縣）
     districts = [f"台中市{d}" if '區' in d else f"彰化縣{d}" for d in target_districts]
 
-    # 【調整 1】：新增 '美容' 與 '皮膚管理'，大幅增加工作室與美學館的曝光率
+    # 搜尋關鍵字類別
     categories = [
         '醫美', '美學', '肌膚管理', '皮膚科', '整形外科', 
         '診所', '泌尿科', '骨科', '婦產科', '醫學美容',
@@ -43,9 +43,8 @@ def run_scraper():
     ]
 
     all_clinics = []
-    seen_names = set()  # 改用純診所名稱（去空格）做唯一去重判斷
+    seen_names = set()  # 純診所名稱（去空格）做唯一去重判斷
 
-    # 加上的 flush=True 可以讓 GitHub Actions 即時印出 Log，不再快取卡住
     print("🚀 開始執行診所自動抓取作業...\n", flush=True)
 
     for dist in districts:
@@ -74,7 +73,7 @@ def run_scraper():
                     title_tag = item.find('div', class_='qBF1Pd')
                     name = title_tag.text.strip() if title_tag else ''
 
-                    # 🎯 【修正 1】：利用去空格後的診所名稱做唯一 Key，徹底解決重複問題
+                    # 利用去空格後的診所名稱做唯一 Key，徹底解決重複問題
                     clean_name = re.sub(r'\s+', '', name)
                     if not clean_name or clean_name in seen_names:
                         continue
@@ -91,7 +90,7 @@ def run_scraper():
                             elif p.replace(' ', '').replace('-', '').isdigit():
                                 phone = p
 
-                    # 🎯 【修正 2】：根據實際地址自動校正行政區，防止跨區推播污染
+                    # 根據實際地址自動校正行政區，防止跨區推播污染
                     real_district = ''
                     for td in target_districts:
                         if td in address:
@@ -116,7 +115,7 @@ def run_scraper():
 
     driver.quit()
 
-    # 【調整 2】：必抓保底清單（已修正逗號語法）
+    # 必抓保底清單
     must_have_clinics = [
         {
             '診所名稱': '沐泳吉玥診所',
@@ -131,7 +130,7 @@ def run_scraper():
             '診所類別': '皮膚科',
             '地址': '台中市東區',
             '電話': ''
-        },  # 補上這行的逗號
+        },
         {
             '診所名稱': '漢蒂妮風尚診所',
             '搜尋行政區': '台中市西區',
@@ -148,10 +147,31 @@ def run_scraper():
             all_clinics.append(item)
             print(f"📌 強制補入重點店家：{item['診所名稱']}", flush=True)
 
-    df = pd.DataFrame(all_clinics)
+    # -------------------------------------------------------------
+    # 🎯 【全新新增】：過濾牙醫相關診所
+    # -------------------------------------------------------------
+    dental_keywords = ['牙', '齒', '矯正', '植牙']
+    filtered_clinics = []
+    dental_count = 0
+
+    for clinic in all_clinics:
+        name = clinic['診所名稱']
+        cat = clinic['診所類別']
+        
+        # 只要名稱或類別含有牙醫關鍵字，就跳過不納入
+        if any(kw in name for kw in dental_keywords) or any(kw in cat for kw in dental_keywords):
+            dental_count += 1
+            continue
+        
+        filtered_clinics.append(clinic)
+
+    print(f"\n🧹 已自動幫你過濾掉 {dental_count} 筆牙醫診所資料！", flush=True)
+
+    # 輸出 CSV
+    df = pd.DataFrame(filtered_clinics)
     output_filename = 'taichung_clinics.csv'
     df.to_csv(output_filename, index=False, encoding='utf-8-sig')
-    print(f"\n✅ 抓取完成！共收集 {len(df)} 筆不重複診所，檔案已儲存至 {output_filename}", flush=True)
+    print(f"✅ 抓取與淨化完成！共收集 {len(df)} 筆目標診所/工作室，檔案已儲存至 {output_filename}", flush=True)
 
 if __name__ == '__main__':
     run_scraper()
