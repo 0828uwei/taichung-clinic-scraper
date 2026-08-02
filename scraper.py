@@ -17,6 +17,7 @@ def run_scraper():
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--lang=zh-TW')
+    chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'zh-TW,zh'})
     chrome_options.add_argument('user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
     # 使用 webdriver-manager 自動下載並匹配與當前 Chrome 相符的 ChromeDriver
@@ -52,7 +53,8 @@ def run_scraper():
             keyword = f"{dist} {cat}"
             print(f"🔍 搜尋中：{keyword}", flush=True)
             
-            url = f"https://www.google.com/maps/search/{quote(keyword)}"
+            # 強制指定繁體中文與台灣地區參數
+            url = f"https://www.google.com/maps/search/{quote(keyword)}?hl=zh-TW&gl=TW"
             driver.get(url)
             time.sleep(3)
 
@@ -148,24 +150,34 @@ def run_scraper():
             print(f"📌 強制補入重點店家：{item['診所名稱']}", flush=True)
 
     # -------------------------------------------------------------
-    # 🎯 【全新新增】：過濾牙醫相關診所
+    # 🎯 【方案 A 安全淨化】：過濾牙醫與中醫相關診所（不誤傷「台中醫美」）
     # -------------------------------------------------------------
     dental_keywords = ['牙', '齒', '矯正', '植牙']
     filtered_clinics = []
     dental_count = 0
+    tcm_count = 0
 
     for clinic in all_clinics:
         name = clinic['診所名稱']
         cat = clinic['診所類別']
         
-        # 只要名稱或類別含有牙醫關鍵字，就跳過不納入
-        if any(kw in name for kw in dental_keywords) or any(kw in cat for kw in dental_keywords):
+        # 1. 檢查是否含有牙醫關鍵字
+        is_dental = any(kw in name for kw in dental_keywords) or any(kw in cat for kw in dental_keywords)
+        if is_dental:
             dental_count += 1
+            continue
+
+        # 2. 檢查是否為真實中醫診所（包含「中醫」，但排除「台中醫」）
+        is_tcm = ('中醫' in name and '台中醫' not in name) or ('中醫' in cat and '台中醫' not in cat)
+        if is_tcm:
+            tcm_count += 1
             continue
         
         filtered_clinics.append(clinic)
 
-    print(f"\n🧹 已自動幫你過濾掉 {dental_count} 筆牙醫診所資料！", flush=True)
+    print(f"\n🧹 淨化完成！共過濾掉：", flush=True)
+    print(f"    ├─ 牙醫診所：{dental_count} 筆", flush=True)
+    print(f"    └─ 中醫診所：{tcm_count} 筆", flush=True)
 
     # 輸出 CSV
     df = pd.DataFrame(filtered_clinics)
