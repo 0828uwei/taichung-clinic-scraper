@@ -14,6 +14,12 @@
       <h1 class="text-2xl font-bold">🏥 台中 / 彰化 診所客戶管理系統</h1>
       <p class="text-blue-100 text-sm mt-1">選取區域與類別，快速進行區域拜訪規劃</p>
     </div>
+    <!-- 新增：顯示最後更新時間區塊 -->
+      <div class="text-right text-xs bg-blue-700/50 px-3 py-1.5 rounded-lg border border-blue-400/30">
+        <span class="text-blue-200">資料庫更新時間：</span>
+        <span id="updateTimeText" class="font-mono font-semibold text-white">讀取中...</span>
+      </div>
+    </div>
   </header>
 
   <main class="max-w-6xl mx-auto px-4">
@@ -59,10 +65,19 @@
       header: true,
       complete: function(results) {
         rawData = results.data.filter(row => row['診所名稱']);
+
+        // 抓取並顯示最後更新時間
+        if (rawData.length > 0 && rawData[0]['資料更新時間']) {
+          document.getElementById('updateTimeText').textContent = rawData[0]['資料更新時間'];
+        } else {
+          document.getElementById('updateTimeText').textContent = '未紀錄';
+        }
+        
         initDropdowns();
         renderCards();
       },
       error: function() {
+        document.getElementById('updateTimeText').textContent = '載入失敗';
         document.getElementById('cardsGrid').innerHTML = `
           <div class="col-span-full text-center py-12 text-red-500 font-semibold">
             ❌ 尚未找到 taichung_clinics.csv 檔案，請確認 GitHub Actions 已成功執行過一次抓取任務。
