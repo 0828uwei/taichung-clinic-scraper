@@ -9,6 +9,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+from datetime import datetime
 
 def run_scraper():
     chrome_options = Options()
@@ -181,6 +182,11 @@ def run_scraper():
 
     # 輸出 CSV
     df = pd.DataFrame(filtered_clinics)
+
+    # 新增一欄「資料更新時間」（全欄填入當前時間）
+    now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
+    df['資料更新時間'] = now_str
+    
     output_filename = 'taichung_clinics.csv'
     df.to_csv(output_filename, index=False, encoding='utf-8-sig')
     print(f"✅ 抓取與淨化完成！共收集 {len(df)} 筆目標診所/工作室，檔案已儲存至 {output_filename}", flush=True)
