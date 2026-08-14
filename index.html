@@ -9,13 +9,16 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
 
+  <!-- Header 區域 -->
   <header class="bg-blue-600 text-white shadow-md py-6 mb-6">
-    <div class="max-w-6xl mx-auto px-4">
-      <h1 class="text-2xl font-bold">🏥 台中 / 彰化 診所客戶管理系統</h1>
-      <p class="text-blue-100 text-sm mt-1">選取區域與類別，快速進行區域拜訪規劃</p>
-    </div>
-    <!-- 新增：顯示最後更新時間區塊 -->
-      <div class="text-right text-xs bg-blue-700/50 px-3 py-1.5 rounded-lg border border-blue-400/30">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold flex items-center gap-2">🏥 台中 / 彰化 診所客戶管理系統</h1>
+        <p class="text-blue-100 text-sm mt-1">選取區域與類別，快速進行區域拜訪規劃</p>
+      </div>
+      
+      <!-- 顯示最後更新時間區塊 (已修復 HTML 標籤) -->
+      <div class="self-start md:self-auto text-right text-xs bg-blue-700/60 px-3 py-2 rounded-lg border border-blue-400/30 shadow-inner">
         <span class="text-blue-200">資料庫更新時間：</span>
         <span id="updateTimeText" class="font-mono font-semibold text-white">讀取中...</span>
       </div>
@@ -23,55 +26,72 @@
   </header>
 
   <main class="max-w-6xl mx-auto px-4">
+    <!-- 篩選控制列 -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
       
+      <!-- 行政區選單 -->
       <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">📍 選擇行政區</label>
-        <select id="districtFilter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <label for="districtFilter" class="block text-sm font-semibold text-slate-700 mb-1">📍 選擇行政區</label>
+        <select id="districtFilter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
           <option value="ALL">全部行政區</option>
         </select>
       </div>
 
+      <!-- 診所類別選單 -->
       <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">🏷️ 選擇診所類別</label>
-        <select id="categoryFilter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <label for="categoryFilter" class="block text-sm font-semibold text-slate-700 mb-1">🏷️ 選擇診所類別</label>
+        <select id="categoryFilter" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
           <option value="ALL">全部類別</option>
         </select>
       </div>
 
+      <!-- 關鍵字搜尋 -->
       <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1">🔍 搜尋名稱/地址</label>
-        <input type="text" id="searchInput" placeholder="輸入診所名稱或路名..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        <label for="searchInput" class="block text-sm font-semibold text-slate-700 mb-1">🔍 搜尋名稱/地址</label>
+        <div class="relative">
+          <input type="text" id="searchInput" placeholder="輸入診所名稱或路名..." class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none pr-8">
+          <button id="clearSearch" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+        </div>
       </div>
 
     </div>
 
+    <!-- 數據統計與重設按鈕 -->
     <div class="flex justify-between items-center mb-4 px-1">
       <div class="text-slate-600 text-sm">
-        符合條件診所：<span id="countText" class="font-bold text-blue-600">0</span> 筆
+        符合條件診所：<span id="countText" class="font-bold text-blue-600 text-base">0</span> 筆
       </div>
+      <button id="resetBtn" class="text-xs text-slate-500 hover:text-blue-600 underline focus:outline-none hidden">
+        🔄 重設所有篩選
+      </button>
     </div>
 
+    <!-- 卡片展示網格 -->
     <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div class="col-span-full text-center py-12 text-slate-400">載入診所資料中...</div>
+      <div class="col-span-full text-center py-12 text-slate-400 flex flex-col items-center gap-2">
+        <svg class="animate-spin h-6 w-6 text-blue-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        載入診所資料中...
+      </div>
     </div>
   </main>
 
   <script>
     let rawData = [];
 
+    // 解析 CSV 檔
     Papa.parse("taichung_clinics.csv", {
       download: true,
       header: true,
+      skipEmptyLines: true,
       complete: function(results) {
-        rawData = results.data.filter(row => row['診所名稱']);
+        rawData = results.data.filter(row => row['診所名稱'] && row['診所名稱'].trim() !== '');
 
-        // 抓取並顯示最後更新時間
-        if (rawData.length > 0 && rawData[0]['資料更新時間']) {
-          document.getElementById('updateTimeText').textContent = rawData[0]['資料更新時間'];
-        } else {
-          document.getElementById('updateTimeText').textContent = '未紀錄';
-        }
+        // 顯示最後更新時間
+        const updateTime = rawData.length > 0 ? rawData[0]['資料更新時間'] : null;
+        document.getElementById('updateTimeText').textContent = updateTime || '未紀錄';
         
         initDropdowns();
         renderCards();
@@ -79,17 +99,24 @@
       error: function() {
         document.getElementById('updateTimeText').textContent = '載入失敗';
         document.getElementById('cardsGrid').innerHTML = `
-          <div class="col-span-full text-center py-12 text-red-500 font-semibold">
-            ❌ 尚未找到 taichung_clinics.csv 檔案，請確認 GitHub Actions 已成功執行過一次抓取任務。
+          <div class="col-span-full text-center py-12 text-red-500 font-semibold bg-red-50 rounded-xl border border-red-200 p-6">
+            ❌ 尚未找到 <code class="bg-red-100 px-2 py-0.5 rounded text-red-700">taichung_clinics.csv</code> 檔案。<br>
+            <span class="text-xs text-red-400 font-normal mt-1 inline-block">請確認檔案已放置於同目錄，或 GitHub Actions 自動抓取任務已順利執行。</span>
           </div>`;
       }
     });
 
     function initDropdowns() {
-      const districts = [...new Set(rawData.map(item => item['搜尋行政區']).filter(Boolean))].sort();
-      const categories = [...new Set(rawData.map(item => item['診所類別']).filter(Boolean))].sort();
-
       const districtSelect = document.getElementById('districtFilter');
+      const categorySelect = document.getElementById('categoryFilter');
+      const searchInput = document.getElementById('searchInput');
+      const clearSearchBtn = document.getElementById('clearSearch');
+      const resetBtn = document.getElementById('resetBtn');
+
+      // 行政區排序（將含有市區/縣區的項目進行優雅排序）
+      const districts = [...new Set(rawData.map(item => item['搜尋行政區']).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-TW'));
+      const categories = [...new Set(rawData.map(item => item['診所類別']).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'zh-TW'));
+
       districts.forEach(dist => {
         const opt = document.createElement('option');
         opt.value = dist;
@@ -97,7 +124,6 @@
         districtSelect.appendChild(opt);
       });
 
-      const categorySelect = document.getElementById('categoryFilter');
       categories.forEach(cat => {
         const opt = document.createElement('option');
         opt.value = cat;
@@ -105,9 +131,41 @@
         categorySelect.appendChild(opt);
       });
 
-      districtSelect.addEventListener('change', renderCards);
-      categorySelect.addEventListener('change', renderCards);
-      document.getElementById('searchInput').addEventListener('input', renderCards);
+      // 監聽變更事件
+      districtSelect.addEventListener('change', onFilterChange);
+      categorySelect.addEventListener('change', onFilterChange);
+      
+      searchInput.addEventListener('input', () => {
+        clearSearchBtn.classList.toggle('hidden', !searchInput.value);
+        onFilterChange();
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        onFilterChange();
+      });
+
+      resetBtn.addEventListener('click', () => {
+        districtSelect.value = 'ALL';
+        categorySelect.value = 'ALL';
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        onFilterChange();
+      });
+    }
+
+    function onFilterChange() {
+      const selectedDist = document.getElementById('districtFilter').value;
+      const selectedCat = document.getElementById('categoryFilter').value;
+      const searchText = document.getElementById('searchInput').value.trim();
+      const resetBtn = document.getElementById('resetBtn');
+
+      // 控制重設按鈕顯示狀態
+      const isFiltered = selectedDist !== 'ALL' || selectedCat !== 'ALL' || searchText !== '';
+      resetBtn.classList.toggle('hidden', !isFiltered);
+
+      renderCards();
     }
 
     function renderCards() {
@@ -129,35 +187,40 @@
       const grid = document.getElementById('cardsGrid');
 
       if (filtered.length === 0) {
-        grid.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400">沒有符合搜尋條件的診所</div>`;
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12 text-slate-400 bg-white rounded-xl border border-dashed border-slate-300">
+            🔎 沒有符合搜尋條件的診所，請嘗試切換行政區或類別條件。
+          </div>`;
         return;
       }
 
       grid.innerHTML = filtered.map(item => {
-        const googleMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item['診所名稱'] + ' ' + item['地址'])}`;
+        const queryStr = `${item['診所名稱'] || ''} ${item['地址'] || ''}`.trim();
+        const googleMapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryStr)}`;
+        
         return `
-          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-shadow flex flex-col justify-between">
+          <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 hover:shadow-md transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div class="flex items-start justify-between gap-2 mb-2">
-                <h3 class="font-bold text-slate-800 text-base leading-snug">${item['診所名稱']}</h3>
-                <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-md whitespace-nowrap font-medium">${item['診所類別']}</span>
+                <h3 class="font-bold text-slate-800 text-base leading-snug group-hover:text-blue-600 transition-colors">${item['診所名稱']}</h3>
+                <span class="inline-block bg-blue-50 text-blue-700 text-xs px-2.5 py-1 rounded-md whitespace-nowrap font-medium shrink-0">${item['診所類別'] || '一般診所'}</span>
               </div>
-              <p class="text-xs text-slate-500 mb-3">📍 ${item['搜尋行政區']}</p>
+              <p class="text-xs text-slate-500 mb-3 flex items-center gap-1">📍 <span class="font-medium text-slate-600">${item['搜尋行政區'] || '未分類區'}</span></p>
               
-              <div class="text-sm text-slate-600 space-y-1.5 mb-4">
-                <p class="flex items-start gap-1">
-                  <span class="shrink-0">🏢</span>
-                  <span>${item['地址'] || '未提供完整地址'}</span>
+              <div class="text-sm text-slate-600 space-y-2 mb-4 border-t border-slate-100 pt-3">
+                <p class="flex items-start gap-1.5 leading-relaxed">
+                  <span class="shrink-0 text-xs">🏢</span>
+                  <span class="text-xs text-slate-700">${item['地址'] || '未提供完整地址'}</span>
                 </p>
-                <p class="flex items-center gap-1">
+                <p class="flex items-center gap-1.5 text-xs">
                   <span class="shrink-0">📞</span>
-                  ${item['電話'] ? `<a href="tel:${item['電話']}" class="text-blue-600 hover:underline">${item['電話']}</a>` : '<span class="text-slate-400">未提供電話</span>'}
+                  ${item['電話'] ? `<a href="tel:${item['電話']}" class="text-blue-600 hover:underline font-mono">${item['電話']}</a>` : '<span class="text-slate-400">未提供電話</span>'}
                 </p>
               </div>
             </div>
 
-            <a href="${googleMapUrl}" target="_blank" class="w-full text-center bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 text-sm font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-1 mt-2">
-              🗺️ 開啟 Google 地圖導航
+            <a href="${googleMapUrl}" target="_blank" rel="noopener noreferrer" class="w-full text-center bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 text-xs font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-1.5 mt-2 shadow-sm active:scale-[0.98]">
+              <span>🗺️</span> 開啟 Google 地圖導航
             </a>
           </div>
         `;
