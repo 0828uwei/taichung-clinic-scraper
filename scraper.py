@@ -25,7 +25,7 @@ def run_scraper():
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # 定義所有目標行政區（簡稱，用於地址比對）
+    # 定義所有目標行政區（簡稱）
     target_districts = [
         '北區', '西區', '東區', '中區', '北屯區', 
         '烏日區', '大肚區', '清水區', '大甲區', 
@@ -35,7 +35,7 @@ def run_scraper():
     ]
 
     # 自動組合全名（台中市/彰化縣）
-    districts = [f"台中市{d}" if '區' in d else f"彰化縣{d}" for d in target_districts]
+    districts_full = {d: f"台中市{d}" if '區' in d else f"彰化縣{d}" for d in target_districts}
 
     # 搜尋關鍵字類別
     categories = [
@@ -49,9 +49,9 @@ def run_scraper():
 
     print("🚀 開始執行診所自動抓取作業...\n", flush=True)
 
-    for dist in districts:
+    for target_d, full_dist in districts_full.items():
         for cat in categories:
-            keyword = f"{dist} {cat}"
+            keyword = f"{full_dist} {cat}"
             print(f"🔍 搜尋中：{keyword}", flush=True)
             
             # 強制指定繁體中文與台灣地區參數
@@ -76,11 +76,13 @@ def run_scraper():
                     title_tag = item.find('div', class_='qBF1Pd')
                     name = title_tag.text.strip() if title_tag else ''
 
-                    # 利用去空格後的診所名稱做唯一 Key，徹底解決重複問題
                     clean_name = re.sub(r'\s+', '', name)
                     if not clean_name or clean_name in seen_names:
                         continue
 
+                    # 提取卡片內的所有文字用於精準地址與電話比對
+                    card_text = item.text
+                    
                     info_tags = item.find_all('div', class_='W4Efsd')
                     address, phone = '', ''
                     if len(info_tags) > 1:
@@ -88,27 +90,31 @@ def run_scraper():
                         parts = info_text.split('·')
                         for p in parts:
                             p = p.strip()
-                            if '台中市' in p or '彰化縣' in p or '區' in p or '鄉' in p or '鎮' in p:
+                            if '台中市' in p or '彰化縣' in p or '區' in p or '鄉' in p or '鎮' in p or '路' in p or '街' in p:
                                 address = p
                             elif p.replace(' ', '').replace('-', '').isdigit():
                                 phone = p
 
-                    # 根據實際地址自動校正行政區，防止跨區推播污染
+                    # -------------------------------------------------------------
+                    # 🎯 【防跨區污染核心邏輯】：優先從地址/卡片內文提取真實行政區
+                    # -------------------------------------------------------------
                     real_district = ''
                     for td in target_districts:
-                        if td in address:
+                        # 檢查地址或卡片內文中是否包含明確的行政區名
+                        if td in address or td in card_text:
                             prefix = '彰化縣' if ('鎮' in td or '鄉' in td) else '台中市'
                             real_district = f"{prefix}{td}"
                             break
 
-                    final_district = real_district if real_district else dist
+                    # 如果在二林鎮搜尋，但卡片明確寫著其他目標行政區（如北斗鎮），就歸類至真實行政區
+                    final_district = real_district if real_district else full_dist
 
                     seen_names.add(clean_name)
                     all_clinics.append({
                         '診所名稱': name,
-                        '搜尋行政區': final_district,  # 使用校正後的真實行政區
+                        '搜尋行政區': final_district,  # 精準歸類為真實行政區
                         '診所類別': cat,
-                        '地址': address,
+                        '地址': address if address else final_district,
                         '電話': phone
                     })
                     count += 1
@@ -151,7 +157,7 @@ def run_scraper():
             print(f"📌 強制補入重點店家：{item['診所名稱']}", flush=True)
 
     # -------------------------------------------------------------
-    # 🎯 【方案 A 安全淨化】：過濾牙醫與中醫相關診所（不誤傷「台中醫美」）
+    # 🎯 【安全淨化】：過濾牙醫與中醫相關診所
     # -------------------------------------------------------------
     dental_keywords = ['牙', '齒', '矯正', '植牙']
     filtered_clinics = []
@@ -183,7 +189,7 @@ def run_scraper():
     # 輸出 CSV
     df = pd.DataFrame(filtered_clinics)
 
-    # 新增一欄「資料更新時間」（全欄填入當前時間）
+    # 新增一欄「資料更新時間」
     now_str = datetime.now().strftime('%Y-%m-%d %H:%M')
     df['資料更新時間'] = now_str
     
