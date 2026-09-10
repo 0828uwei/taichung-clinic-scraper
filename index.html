@@ -12,28 +12,109 @@
         h1 { font-size: 24px; color: #1a365d; margin-bottom: 8px; }
         .subtitle { font-size: 14px; color: #718096; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
         .update-time { background-color: #eef2f7; padding: 4px 10px; border-radius: 6px; font-weight: 500; color: #2b6cb0; }
+        
+        /* 篩選區塊格狀排版 */
         .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .form-group { display: flex; flex-direction: column; }
         label { font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 6px; }
-        select, input { padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; background-color: #fff; }
+        select, input { padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; background-color: #fff; width: 100%; }
+        
         .stats-bar { margin-bottom: 15px; font-size: 14px; color: #4a5568; font-weight: 600; }
+        
+        /* 桌面版表格樣式 */
         .table-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
         th { background-color: #2b6cb0; color: #fff; padding: 12px 16px; font-weight: 600; white-space: nowrap; }
         td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; color: #2d3748; }
         tr:nth-child(even) { background-color: #f8fafc; }
+        
+        /* Badge 標籤樣式 */
         .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         .badge-district { background-color: #ebf8ff; color: #2b6cb0; }
         .badge-category { background-color: #feebc8; color: #c05621; }
-        
-        /* 營業狀態 Badge 樣式 */
         .status-open { background-color: #c6f6d5; color: #22543d; }
         .status-closed { background-color: #edf2f7; color: #718096; }
         .status-unknown { background-color: #e2e8f0; color: #4a5568; }
 
-        .map-link { color: #3182ce; text-decoration: none; font-weight: 500; }
+        .map-link { color: #3182ce; text-decoration: none; font-weight: 600; }
         .map-link:hover { text-decoration: underline; }
+        .phone-link { color: #2d3748; text-decoration: none; }
+        .phone-link:hover { color: #3182ce; text-decoration: underline; }
         .empty-state { text-align: center; padding: 40px; color: #a0aec0; }
+
+        /* 📱 手機端響應式卡片化設計 (RWD Adaptive) */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 16px; border-radius: 8px; }
+            h1 { font-size: 20px; }
+            .subtitle { font-size: 13px; }
+            .controls { grid-template-columns: 1fr; padding: 12px; gap: 12px; }
+            
+            /* 將表格轉為獨立卡片清單 */
+            .table-container { border: none; }
+            table, thead, tbody, th, td, tr { display: block; }
+            thead { display: none; } /* 隱藏傳統表頭 */
+            
+            tr {
+                background: #ffffff !important;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 14px 16px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            }
+
+            td {
+                padding: 4px 0;
+                border: none;
+                display: flex;
+                align-items: flex-start;
+                font-size: 14px;
+            }
+
+            /* 第一行：診所名稱（放大突出顯示） */
+            td:nth-child(1) {
+                font-size: 17px;
+                padding-bottom: 8px;
+                border-bottom: 1px dashed #e2e8f0;
+                margin-bottom: 8px;
+            }
+
+            /* 標籤組合橫向排列 */
+            .mobile-badge-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-bottom: 6px;
+            }
+
+            /* 標題與內容整合標籤 */
+            td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #718096;
+                width: 75px;
+                flex-shrink: 0;
+                font-size: 13px;
+            }
+
+            /* 隱藏桌面版的單一標籤列，改由組合標籤展示 */
+            td.td-district, td.td-category, td.td-status {
+                display: none;
+            }
+            
+            td.td-badges {
+                display: flex;
+                padding-bottom: 6px;
+            }
+            td.td-badges::before {
+                display: none;
+            }
+
+            td.td-address, td.td-phone {
+                line-height: 1.5;
+            }
+        }
     </style>
 </head>
 <body>
@@ -185,14 +266,22 @@
                 else if (status.includes('休息') || status.includes('未營業')) statusBadgeClass = 'status-closed';
 
                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' ' + address)}`;
+                const phoneTel = phone ? `tel:${phone.replace(/[^0-9]/g, '')}` : '#';
 
                 tr.innerHTML = `
-                    <td><strong><a href="${mapUrl}" target="_blank" class="map-link">${escapeHtml(name)}</a></strong></td>
-                    <td><span class="badge badge-district">${escapeHtml(district)}</span></td>
-                    <td><span class="badge badge-category">${escapeHtml(category)}</span></td>
-                    <td><span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span></td>
-                    <td>${escapeHtml(address)}</td>
-                    <td>${escapeHtml(phone)}</td>
+                    <td data-label="診所名稱"><strong><a href="${mapUrl}" target="_blank" class="map-link">📍 ${escapeHtml(name)}</a></strong></td>
+                    <td class="td-badges">
+                        <div class="mobile-badge-group">
+                            <span class="badge badge-district">${escapeHtml(district)}</span>
+                            <span class="badge badge-category">${escapeHtml(category)}</span>
+                            <span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span>
+                        </div>
+                    </td>
+                    <td class="td-district" data-label="行政區"><span class="badge badge-district">${escapeHtml(district)}</span></td>
+                    <td class="td-category" data-label="診所類別"><span class="badge badge-category">${escapeHtml(category)}</span></td>
+                    <td class="td-status" data-label="即時狀態"><span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span></td>
+                    <td class="td-address" data-label="地址：">${escapeHtml(address)}</td>
+                    <td class="td-phone" data-label="電話：">${phone ? `<a href="${phoneTel}" class="phone-link">📞 ${escapeHtml(phone)}</a>` : '未提供'}</td>
                 `;
                 tbody.appendChild(tr);
             });
