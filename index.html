@@ -5,183 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>台中/彰化醫美與醫療診所清單搜尋系統</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        header { margin-bottom: 25px; border-bottom: 2px solid #eef2f5; padding-bottom: 15px; }
+        h1 { font-size: 24px; color: #1a365d; margin-bottom: 8px; }
+        .subtitle { font-size: 14px; color: #718096; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .update-time { background-color: #eef2f7; padding: 4px 10px; border-radius: 6px; font-weight: 500; color: #2b6cb0; }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .form-group { display: flex; flex-direction: column; }
+        label { font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 6px; }
+        select, input { padding: 10px 12px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none; background-color: #fff; }
+        .stats-bar { margin-bottom: 15px; font-size: 14px; color: #4a5568; font-weight: 600; }
+        .table-container { overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th { background-color: #2b6cb0; color: #fff; padding: 12px 16px; font-weight: 600; white-space: nowrap; }
+        td { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; color: #2d3748; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+        .badge-district { background-color: #ebf8ff; color: #2b6cb0; }
+        .badge-category { background-color: #feebc8; color: #c05621; }
+        
+        /* 營業狀態 Badge 樣式 */
+        .status-open { background-color: #c6f6d5; color: #22543d; }
+        .status-closed { background-color: #edf2f7; color: #718096; }
+        .status-unknown { background-color: #e2e8f0; color: #4a5568; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        header {
-            margin-bottom: 25px;
-            border-bottom: 2px solid #eef2f5;
-            padding-bottom: 15px;
-        }
-
-        h1 {
-            font-size: 24px;
-            color: #1a365d;
-            margin-bottom: 8px;
-        }
-
-        .subtitle {
-            font-size: 14px;
-            color: #718096;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .update-time {
-            background-color: #eef2f7;
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-weight: 500;
-            color: #2b6cb0;
-        }
-
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-            background-color: #f8fafc;
-            padding: 20px;
-            border-radius: 8px;
-            border: 1px solid #e2e8f0;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-size: 13px;
-            font-weight: 600;
-            color: #4a5568;
-            margin-bottom: 6px;
-        }
-
-        select, input {
-            padding: 10px 12px;
-            border: 1px solid #cbd5e0;
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            background-color: #fff;
-        }
-
-        select:focus, input:focus {
-            border-color: #3182ce;
-            box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.15);
-        }
-
-        .stats-bar {
-            margin-bottom: 15px;
-            font-size: 14px;
-            color: #4a5568;
-            font-weight: 600;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #2b6cb0;
-            color: #ffffff;
-            padding: 12px 16px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #2d3748;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f8fafc;
-        }
-
-        tr:hover {
-            background-color: #edf2f7;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 600;
-            background-color: #e2e8f0;
-            color: #4a5568;
-        }
-
-        .badge-district {
-            background-color: #ebf8ff;
-            color: #2b6cb0;
-        }
-
-        .badge-category {
-            background-color: #feebc8;
-            color: #c05621;
-        }
-
-        .map-link {
-            color: #3182ce;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .map-link:hover {
-            text-decoration: underline;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px;
-            color: #a0aec0;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            .controls {
-                grid-template-columns: 1fr;
-            }
-        }
+        .map-link { color: #3182ce; text-decoration: none; font-weight: 500; }
+        .map-link:hover { text-decoration: underline; }
+        .empty-state { text-align: center; padding: 40px; color: #a0aec0; }
     </style>
 </head>
 <body>
@@ -189,7 +41,7 @@
         <header>
             <h1>台中/彰化醫美與醫療診所清單</h1>
             <div class="subtitle">
-                <span>提供快速篩選、跨區檢索與關鍵字搜尋</span>
+                <span>提供快速篩選、營業狀態確認與關鍵字搜尋</span>
                 <span class="update-time" id="update-time-display">資料載入中...</span>
             </div>
         </header>
@@ -197,56 +49,56 @@
         <div class="controls">
             <div class="form-group">
                 <label for="district-select">選擇行政區</label>
-                <select id="district-select">
-                    <option value="">全部行政區</option>
-                </select>
+                <select id="district-select"><option value="">全部行政區</option></select>
             </div>
             <div class="form-group">
                 <label for="category-select">選擇診所類別</label>
-                <select id="category-select">
-                    <option value="">全部類別</option>
+                <select id="category-select"><option value="">全部類別</option></select>
+            </div>
+            <div class="form-group">
+                <label for="status-select">營業狀態</label>
+                <select id="status-select">
+                    <option value="">全部狀態</option>
+                    <option value="營業中">營業中</option>
+                    <option value="休息中/未營業">休息中/未營業</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="search-input">關鍵字搜尋（名稱/地址/電話）</label>
-                <input type="text" id="search-input" placeholder="例如：沐泳、北屯區、04...">
+                <label for="search-input">關鍵字搜尋</label>
+                <input type="text" id="search-input" placeholder="名稱/地址/電話...">
             </div>
         </div>
 
-        <div class="stats-bar" id="stats-display">
-            顯示 0 筆診所資料
-        </div>
+        <div class="stats-bar" id="stats-display">顯示 0 筆診所資料</div>
 
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 25%;">診所名稱</th>
-                        <th style="width: 15%;">行政區</th>
+                        <th style="width: 22%;">診所名稱</th>
+                        <th style="width: 13%;">行政區</th>
                         <th style="width: 12%;">搜尋類別</th>
-                        <th style="width: 33%;">地址</th>
+                        <th style="width: 13%;">即時狀態</th>
+                        <th style="width: 25%;">地址</th>
                         <th style="width: 15%;">電話</th>
                     </tr>
                 </thead>
                 <tbody id="clinic-table-body">
-                    <tr>
-                        <td colspan="5" class="empty-state">資料載入中，請稍候...</td>
-                    </tr>
+                    <tr><td colspan="6" class="empty-state">資料載入中...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- 引入 PapaParse 用於解析 CSV -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script>
         let allData = [];
 
         document.addEventListener("DOMContentLoaded", function() {
             fetchCSV();
-
             document.getElementById('district-select').addEventListener('change', filterData);
             document.getElementById('category-select').addEventListener('change', filterData);
+            document.getElementById('status-select').addEventListener('change', filterData);
             document.getElementById('search-input').addEventListener('input', filterData);
         });
 
@@ -260,12 +112,9 @@
                     initFilters();
                     renderTable(allData);
                     updateStats(allData.length);
-                    updateLastModifiedTime(allData);
-                },
-                error: function(err) {
-                    console.error("CSV 解析失敗:", err);
-                    document.getElementById('clinic-table-body').innerHTML = 
-                        '<tr><td colspan="5" class="empty-state" style="color: #e53e3e;">無法載入 taichung_clinics.csv 資料檔，請確認檔案是否存在。</td></tr>';
+                    if (allData.length > 0 && allData[0]['資料更新時間']) {
+                        document.getElementById('update-time-display').textContent = `最後抓取時間：${allData[0]['資料更新時間']}`;
+                    }
                 }
             });
         }
@@ -273,44 +122,40 @@
         function initFilters() {
             const districtSet = new Set();
             const categorySet = new Set();
-
             allData.forEach(item => {
                 if (item['搜尋行政區']) districtSet.add(item['搜尋行政區'].trim());
                 if (item['診所類別']) categorySet.add(item['診所類別'].trim());
             });
 
-            const districtSelect = document.getElementById('district-select');
+            const dSelect = document.getElementById('district-select');
             Array.from(districtSet).sort().forEach(d => {
-                const opt = document.createElement('option');
-                opt.value = d;
-                opt.textContent = d;
-                districtSelect.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = d; opt.textContent = d;
+                dSelect.appendChild(opt);
             });
 
-            const categorySelect = document.getElementById('category-select');
+            const cSelect = document.getElementById('category-select');
             Array.from(categorySet).sort().forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c;
-                opt.textContent = c;
-                categorySelect.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = c; opt.textContent = c;
+                cSelect.appendChild(opt);
             });
         }
 
         function filterData() {
             const selectedDistrict = document.getElementById('district-select').value;
             const selectedCategory = document.getElementById('category-select').value;
+            const selectedStatus = document.getElementById('status-select').value;
             const searchText = document.getElementById('search-input').value.toLowerCase().trim();
 
             const filtered = allData.filter(item => {
                 const matchesDistrict = !selectedDistrict || item['搜尋行政區'] === selectedDistrict;
                 const matchesCategory = !selectedCategory || item['診所類別'] === selectedCategory;
+                const matchesStatus = !selectedStatus || item['營業狀態'] === selectedStatus;
                 
                 const nameMatch = (item['診所名稱'] || '').toLowerCase().includes(searchText);
                 const addressMatch = (item['地址'] || '').toLowerCase().includes(searchText);
                 const phoneMatch = (item['電話'] || '').toLowerCase().includes(searchText);
-                const matchesSearch = !searchText || nameMatch || addressMatch || phoneMatch;
 
-                return matchesDistrict && matchesCategory && matchesSearch;
+                return matchesDistrict && matchesCategory && matchesStatus && (!searchText || nameMatch || addressMatch || phoneMatch);
             });
 
             renderTable(filtered);
@@ -322,18 +167,22 @@
             tbody.innerHTML = '';
 
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">未找到符合條件的診所資料</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-state">未找到符合條件的診所資料</td></tr>';
                 return;
             }
 
             data.forEach(item => {
                 const tr = document.createElement('tr');
-                
                 const name = item['診所名稱'] || '未提供';
                 const district = item['搜尋行政區'] || '未提供';
                 const category = item['診所類別'] || '未提供';
+                const status = item['營業狀態'] || '未知';
                 const address = item['地址'] || '未提供';
                 const phone = item['電話'] || '未提供';
+
+                let statusBadgeClass = 'status-unknown';
+                if (status === '營業中') statusBadgeClass = 'status-open';
+                else if (status.includes('休息') || status.includes('未營業')) statusBadgeClass = 'status-closed';
 
                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name + ' ' + address)}`;
 
@@ -341,6 +190,7 @@
                     <td><strong><a href="${mapUrl}" target="_blank" class="map-link">${escapeHtml(name)}</a></strong></td>
                     <td><span class="badge badge-district">${escapeHtml(district)}</span></td>
                     <td><span class="badge badge-category">${escapeHtml(category)}</span></td>
+                    <td><span class="badge ${statusBadgeClass}">${escapeHtml(status)}</span></td>
                     <td>${escapeHtml(address)}</td>
                     <td>${escapeHtml(phone)}</td>
                 `;
@@ -352,21 +202,8 @@
             document.getElementById('stats-display').textContent = `顯示 ${count} 筆診所資料 (共 ${allData.length} 筆)`;
         }
 
-        function updateLastModifiedTime(data) {
-            if (data.length > 0 && data[0]['資料更新時間']) {
-                document.getElementById('update-time-display').textContent = `最後更新時間：${data[0]['資料更新時間']}`;
-            } else {
-                document.getElementById('update-time-display').textContent = `最後更新時間：未知`;
-            }
-        }
-
         function escapeHtml(text) {
-            return String(text)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+            return String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
         }
     </script>
 </body>
